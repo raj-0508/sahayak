@@ -1,5 +1,6 @@
 {
   "name": "sahayak-backend",
+  "packageManager": "pnpm@10.14.0",
   "version": "1.0.0",
   "description": "Sahayak Backend API Server (Express + MongoDB)",
   "main": "src/server.js",
