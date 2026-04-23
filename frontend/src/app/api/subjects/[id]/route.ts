@@ -1,0 +1,17 @@
+import { NextRequest } from 'next/server';
+import { forwardToBackend } from '@/lib/proxy';
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return forwardToBackend(request, `/api/subjects/${id}`);
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return forwardToBackend(request, `/api/subjects/${id}`);
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return forwardToBackend(request, `/api/subjects/${id}`);
+}

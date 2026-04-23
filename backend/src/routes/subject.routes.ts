@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { protect, requireAdmin } from '../middleware/auth.middleware';
+import { getSubjects, createSubject, getSubject, updateSubject, deleteSubject } from '../controllers/subject.controller';
+const router = Router();
+router.get('/', getSubjects);
+router.post('/', protect, requireAdmin, createSubject);
+router.get('/:id', getSubject);
+router.put('/:id', protect, requireAdmin, updateSubject);
+router.delete('/:id', protect, requireAdmin, deleteSubject);
+export default router;

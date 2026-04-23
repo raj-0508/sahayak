@@ -1,0 +1,14 @@
+import { Router } from 'express';
+import { protect } from '../middleware/auth.middleware';
+import { getTests, createTest, getTest, updateTest, deleteTest, submitTest, publishResults, unpublishResults, getTestResults } from '../controllers/test.controller';
+const router = Router();
+router.get('/', protect, getTests);
+router.post('/', protect, createTest);
+router.get('/:testId', protect, getTest);
+router.put('/:testId', protect, updateTest);
+router.delete('/:testId', protect, deleteTest);
+router.post('/:testId', protect, submitTest);
+router.post('/:testId/publish-results', protect, publishResults);
+router.delete('/:testId/publish-results', protect, unpublishResults);
+router.get('/:testId/results', protect, getTestResults);
+export default router;

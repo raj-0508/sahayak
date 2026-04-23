@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { protect, requireStudent } from '../middleware/auth.middleware';
+import { getClasses, createClass, getClass, updateClass, deleteClass, getAvailableClasses } from '../controllers/class.controller';
+const router = Router();
+router.get('/available', protect, requireStudent, getAvailableClasses);
+router.get('/', protect, getClasses);
+router.post('/', protect, createClass);
+router.get('/:id', protect, getClass);
+router.put('/:id', protect, updateClass);
+router.delete('/:id', protect, deleteClass);
+export default router;
