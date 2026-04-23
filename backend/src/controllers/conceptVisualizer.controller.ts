@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import * as express from 'express';
 import Content from '../models/Content';
 import Class from '../models/Class';
 import SubjectMaterial from '../models/SubjectMaterial';
@@ -6,7 +6,7 @@ import connectDB from '../config/db';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { generateWithFallback } from '../utils/ai';
 
-export async function conceptVisualizer(req: AuthRequest, res: Response) {
+export async function conceptVisualizer(req: AuthRequest, res: express.Response) {
   try {
     const u = req.user;
     const { text, topic, useRag } = req.body;
