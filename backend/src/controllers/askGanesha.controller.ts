@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import * as express from 'express';
 import Content from '../models/Content';
 import Class from '../models/Class';
 import SubjectMaterial from '../models/SubjectMaterial';
@@ -15,7 +15,7 @@ function calculateSimilarity(text1: string, text2: string): number {
   return intersection / Math.max(words1.length, 1);
 }
 
-export async function askGanesha(req: AuthRequest, res: Response) {
+export async function askGanesha(req: AuthRequest, res: express.Response) {
   try {
     const u = req.user;
     if (!GEMINI_KEY) return res.status(503).json({ error: 'Gemini API key not configured' });
