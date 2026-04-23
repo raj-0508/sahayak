@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from 'react';
+import React, { useEffect, ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
@@ -10,7 +10,7 @@ import { GoogleTranslate } from '@/components/google-translate';
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const { user } = useAuth();
   const router = useRouter();
