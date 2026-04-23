@@ -1,8 +1,8 @@
-import { Response } from 'express';
+import * as express from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { generateWithFallback } from '../utils/ai';
 
-export async function analyzeContent(req: AuthRequest, res: Response) {
+export async function analyzeContent(req: AuthRequest, res: express.Response) {
   try {
     const u = req.user;
     if (u.user_type !== 'teacher') return res.status(403).json({ error: 'Teacher access required' });
