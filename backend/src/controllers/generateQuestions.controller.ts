@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import * as express from 'express';
 import connectDB from '../config/db';
 import SubjectMaterial from '../models/SubjectMaterial';
 import Content from '../models/Content';
@@ -6,7 +6,7 @@ import { AuthRequest } from '../middleware/auth.middleware';
 import { generateWithFallback } from '../utils/ai';
 import mongoose from 'mongoose';
 
-export async function generateQuestions(req: AuthRequest, res: Response) {
+export async function generateQuestions(req: AuthRequest, res: express.Response) {
   try {
     const u = req.user;
     if (u.user_type !== 'teacher') return res.status(403).json({ error: 'Teacher access required' });
