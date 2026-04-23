@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { Response } from 'express';
+import * as express from 'express';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sahayak-super-secret-key';
 
@@ -11,7 +11,7 @@ export function generateToken(user: any): string {
   );
 }
 
-export function setAuthCookie(res: Response, token: string): void {
+export function setAuthCookie(res: express.Response, token: string): void {
   res.cookie('auth-token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -21,6 +21,6 @@ export function setAuthCookie(res: Response, token: string): void {
   });
 }
 
-export function clearAuthCookie(res: Response): void {
+export function clearAuthCookie(res: express.Response): void {
   res.clearCookie('auth-token', { path: '/' });
 }
