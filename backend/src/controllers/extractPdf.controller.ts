@@ -1,14 +1,10 @@
-import { Response } from 'express';
+import * as express from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import multer from 'multer';
-import { Request } from 'express';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
 
-// Note: This controller expects the file from multer memory storage
-// The route needs a multer middleware. We handle it inline in the route or via a wrapper.
-export async function extractPdf(req: AuthRequest & { file?: Express.Multer.File }, res: Response) {
+export async function extractPdf(req: AuthRequest & { file?: Express.Multer.File }, res: express.Response) {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file provided' });
     if (req.file.mimetype !== 'application/pdf') return res.status(400).json({ error: 'File must be a PDF' });
