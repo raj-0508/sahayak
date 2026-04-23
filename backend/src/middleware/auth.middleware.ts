@@ -1,15 +1,15 @@
-import { Request, Response, NextFunction } from 'express';
+import * as express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import connectDB from '../config/db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sahayak-super-secret-key';
 
-export interface AuthRequest extends Request {
+export interface AuthRequest extends express.Request {
   user?: any;
 }
 
-export async function protect(req: AuthRequest, res: Response, next: NextFunction) {
+export async function protect(req: AuthRequest, res: express.Response, next: express.NextFunction) {
   try {
     let token: string | undefined;
     const authHeader = req.headers.authorization;
@@ -31,17 +31,17 @@ export async function protect(req: AuthRequest, res: Response, next: NextFunctio
   }
 }
 
-export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+export function requireAdmin(req: AuthRequest, res: express.Response, next: express.NextFunction) {
   if (req.user?.user_type !== 'admin') return res.status(403).json({ error: 'Admin access required' });
   next();
 }
 
-export function requireTeacher(req: AuthRequest, res: Response, next: NextFunction) {
+export function requireTeacher(req: AuthRequest, res: express.Response, next: express.NextFunction) {
   if (req.user?.user_type !== 'teacher') return res.status(403).json({ error: 'Teacher access required' });
   next();
 }
 
-export function requireStudent(req: AuthRequest, res: Response, next: NextFunction) {
+export function requireStudent(req: AuthRequest, res: express.Response, next: express.NextFunction) {
   if (req.user?.user_type !== 'student') return res.status(403).json({ error: 'Student access required' });
   next();
 }
