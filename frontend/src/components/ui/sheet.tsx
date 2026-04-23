@@ -1,19 +1,20 @@
 "use client"
 
 import * as React from "react"
-import * as SheetPrimitive from "@radix-ui/react-dialog"
+import * as SheetPrimitiveRaw from "@radix-ui/react-dialog"
+const SheetPrimitive = SheetPrimitiveRaw as any
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Sheet = SheetPrimitive.Root
+const Sheet = SheetPrimitive.Root as any
 
-const SheetTrigger = SheetPrimitive.Trigger
+const SheetTrigger = SheetPrimitive.Trigger as any
 
-const SheetClose = SheetPrimitive.Close
+const SheetClose = SheetPrimitive.Close as any
 
-const SheetPortal = SheetPrimitive.Portal
+const SheetPortal = SheetPrimitive.Portal as any
 
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,
@@ -51,16 +52,21 @@ const sheetVariants = cva(
 
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
+    VariantProps<typeof sheetVariants> {
+  children?: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
+  side?: "top" | "bottom" | "left" | "right"
+}
 
 const SheetContent = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Content>,
+  React.ElementRef<any>,
   SheetContentProps
 >(({ side = "right", className, children, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
-      ref={ref}
+      ref={ref as any}
       className={cn(sheetVariants({ side }), className)}
       {...props}
     >
@@ -71,7 +77,7 @@ const SheetContent = React.forwardRef<
       </SheetPrimitive.Close>
     </SheetPrimitive.Content>
   </SheetPortal>
-))
+)) as any
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({
@@ -103,28 +109,41 @@ const SheetFooter = ({
 SheetFooter.displayName = "SheetFooter"
 
 const SheetTitle = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
+  React.ElementRef<any>,
+  React.ComponentPropsWithoutRef<any>
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Title
-    ref={ref}
+    ref={ref as any}
     className={cn("text-lg font-semibold text-foreground", className)}
     {...props}
   />
-))
+)) as any
 SheetTitle.displayName = SheetPrimitive.Title.displayName
 
 const SheetDescription = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
+  React.ElementRef<any>,
+  React.ComponentPropsWithoutRef<any>
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Description
-    ref={ref}
+    ref={ref as any}
     className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
-))
+)) as any
 SheetDescription.displayName = SheetPrimitive.Description.displayName
+
+const exportComponents = {
+  Sheet,
+  SheetPortal,
+  SheetOverlay,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+}
 
 export {
   Sheet,
@@ -138,3 +157,5 @@ export {
   SheetTitle,
   SheetDescription,
 }
+
+export default exportComponents as any
