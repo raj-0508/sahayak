@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import * as TabsPrimitive from "@radix-ui/react-tabs"
+import * as TabsPrimitiveRaw from "@radix-ui/react-tabs"
+const TabsPrimitive = TabsPrimitiveRaw as any
 
 import { cn } from "@/lib/utils"
 
-const Tabs = TabsPrimitive.Root
+const Tabs = TabsPrimitive.Root as any
 
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, School, ClipboardList, CheckCircle, Clock, BarChart, BookOpen, Target } from "lucide-react";
 import type { User } from "@/lib/auth";
 import { useEffect, useState } from "react";
+import { apiGet } from "@/lib/api";
 
 type StatsCardsProps = {
     userType: User['user_type'];
@@ -52,19 +53,16 @@ export function StatsCards({ userType }: StatsCardsProps) {
         async function fetchStats() {
             try {
                 // Fetch classes
-                const classesRes = await fetch('/api/classes');
-                const classesData = await classesRes.json();
+                const classesData = await apiGet('/api/classes');
                 const classCount = classesData.classes?.length || 0;
 
                 // Fetch join requests
-                const requestsRes = await fetch('/api/join-requests');
-                const requestsData = await requestsRes.json();
+                const requestsData = await apiGet('/api/join-requests');
                 const pendingCount = requestsData.requests?.filter((r: any) => r.status === 'pending').length || 0;
 
                 if (userType === 'admin') {
                     // Fetch users for admin
-                    const usersRes = await fetch('/api/users');
-                    const usersData = await usersRes.json();
+                    const usersData = await apiGet('/api/users');
                     const users = usersData.users || [];
                     
                     setStats({

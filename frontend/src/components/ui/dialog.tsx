@@ -1,18 +1,19 @@
 "use client"
 
 import * as React from "react"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
+import * as DialogPrimitiveRaw from "@radix-ui/react-dialog"
+const DialogPrimitive = DialogPrimitiveRaw as any
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Dialog = DialogPrimitive.Root
+const Dialog = DialogPrimitive.Root as any
 
-const DialogTrigger = DialogPrimitive.Trigger
+const DialogTrigger = DialogPrimitive.Trigger as any
 
-const DialogPortal = DialogPrimitive.Portal
+const DialogPortal = DialogPrimitive.Portal as any
 
-const DialogClose = DialogPrimitive.Close
+const DialogClose = DialogPrimitive.Close as any
 
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,

@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 
 interface ClassData {
   _id: string;
@@ -96,15 +97,11 @@ export function TeacherClassManagement() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [classesRes, subjectsRes, requestsRes] = await Promise.all([
-        fetch('/api/classes'),
-        fetch('/api/subjects'),
-        fetch('/api/join-requests')
+      const [classesData, subjectsData, requestsData] = await Promise.all([
+        apiGet('/api/classes'),
+        apiGet('/api/subjects'),
+        apiGet('/api/join-requests'),
       ]);
-
-      const classesData = await classesRes.json();
-      const subjectsData = await subjectsRes.json();
-      const requestsData = await requestsRes.json();
 
       setClasses(classesData.classes || []);
       setSubjects(subjectsData.subjects || []);
@@ -133,32 +130,18 @@ export function TeacherClassManagement() {
 
     setCreating(true);
     try {
-      const response = await fetch('/api/classes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      await apiPost('/api/classes', formData);
+      toast({
+        title: "Success",
+        description: "Class created successfully",
       });
-
-      const data = await response.json();
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Class created successfully",
-        });
-        setShowCreateDialog(false);
-        setFormData({ class_name: '', description: '', subject_id: '', grade_level: '' });
-        fetchData();
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to create class",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      setShowCreateDialog(false);
+      setFormData({ class_name: '', description: '', subject_id: '', grade_level: '' });
+      fetchData();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to create class",
+        description: error.message || "Failed to create class",
         variant: "destructive",
       });
     } finally {
@@ -169,30 +152,16 @@ export function TeacherClassManagement() {
   const handleRequestAction = async (requestId: string, action: 'accept' | 'reject') => {
     setProcessingRequest(requestId);
     try {
-      const response = await fetch(`/api/join-requests/${requestId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+      await apiPut(`/api/join-requests/${requestId}`, { action });
+      toast({
+        title: "Success",
+        description: `Request ${action}ed successfully`,
       });
-
-      const data = await response.json();
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: `Request ${action}ed successfully`,
-        });
-        fetchData();
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || `Failed to ${action} request`,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      fetchData();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: `Failed to ${action} request`,
+        description: error.message || `Failed to ${action} request`,
         variant: "destructive",
       });
     } finally {
@@ -385,7 +354,7 @@ export function TeacherClassManagement() {
               <Label htmlFor="grade_level">Grade Level *</Label>
               <Select
                 value={formData.grade_level}
-                onValueChange={(value) => setFormData({ ...formData, grade_level: value })}
+                onValueChange={(value: string) => setFormData({ ...formData, grade_level: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select grade level" />
@@ -407,7 +376,7 @@ export function TeacherClassManagement() {
               <Label htmlFor="subject_id">Subject *</Label>
               <Select
                 value={formData.subject_id}
-                onValueChange={(value) => setFormData({ ...formData, subject_id: value })}
+                onValueChange={(value: string) => setFormData({ ...formData, subject_id: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select subject" />
@@ -446,7 +415,7 @@ export function TeacherClassManagement() {
       </Dialog>
 
       {/* View Students Dialog */}
-      <Dialog open={!!viewingClass} onOpenChange={(open) => !open && setViewingClass(null)}>
+      <Dialog open={!!viewingClass} onOpenChange={(open: boolean) => !open && setViewingClass(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{viewingClass?.class_name} - Enrolled Students</DialogTitle>

@@ -1,16 +1,17 @@
 "use client"
 
 import * as React from "react"
-import * as SelectPrimitive from "@radix-ui/react-select"
+import * as SelectPrimitiveRaw from "@radix-ui/react-select"
+const SelectPrimitive = SelectPrimitiveRaw as any
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Select = SelectPrimitive.Root
+const Select = SelectPrimitive.Root as any
 
-const SelectGroup = SelectPrimitive.Group
+const SelectGroup = SelectPrimitive.Group as any
 
-const SelectValue = SelectPrimitive.Value
+const SelectValue = SelectPrimitive.Value as any
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
