@@ -24,7 +24,9 @@ export interface ApiError {
 }
 
 // ── Point all API calls to the Express backend ──────────────
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// ── Point all API calls to the Express backend ──────────────
+const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+export const API_BASE = RAW_API_BASE.endsWith('/') ? RAW_API_BASE.slice(0, -1) : RAW_API_BASE;
 
 export function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('sahayak-token') : null;
