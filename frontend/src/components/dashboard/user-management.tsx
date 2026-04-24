@@ -51,6 +51,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 
 interface ApiUser {
   _id: string;
@@ -101,11 +102,8 @@ export function UserManagement() {
 
   const fetchSubjects = async () => {
     try {
-      const response = await fetch('/api/subjects');
-      const data = await response.json();
-      if (response.ok) {
-        setSubjects(data.subjects || []);
-      }
+      const data = await apiGet('/api/subjects');
+      setSubjects(data.subjects || []);
     } catch (error) {
       console.error('Failed to fetch subjects:', error);
     }
@@ -114,21 +112,12 @@ export function UserManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/users');
-      const data = await response.json();
-      if (response.ok) {
-        setUsers(data.users || []);
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to fetch users",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      const data = await apiGet('/api/users');
+      setUsers(data.users || []);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to fetch users",
+        description: error.message || "Failed to fetch users",
         variant: "destructive",
       });
     } finally {
@@ -198,32 +187,19 @@ export function UserManagement() {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
+      await apiPost('/api/users', formData);
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "User created successfully",
-        });
-        setIsAddDialogOpen(false);
-        resetForm();
-        fetchUsers();
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to create user",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      toast({
+        title: "Success",
+        description: "User created successfully",
+      });
+      setIsAddDialogOpen(false);
+      resetForm();
+      fetchUsers();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to create user",
+        description: error.message || "Failed to create user",
         variant: "destructive",
       });
     } finally {
@@ -263,44 +239,27 @@ export function UserManagement() {
 
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('sahayak-token');
-      const response = await fetch(`/api/users/${selectedUser._id}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          user_type: formData.user_type,
-          phone: formData.phone,
-          subject_ids: formData.subject_ids,
-          grade_level: formData.grade_level,
-          teaching_grades: formData.teaching_grades,
-        }),
+      await apiPut(`/api/users/${selectedUser._id}`, {
+        name: formData.name,
+        email: formData.email,
+        user_type: formData.user_type,
+        phone: formData.phone,
+        subject_ids: formData.subject_ids,
+        grade_level: formData.grade_level,
+        teaching_grades: formData.teaching_grades,
       });
-      const data = await response.json();
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "User updated successfully",
-        });
-        setIsEditDialogOpen(false);
-        resetForm();
-        fetchUsers();
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to update user",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      });
+      setIsEditDialogOpen(false);
+      resetForm();
+      fetchUsers();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update user",
+        description: error.message || "Failed to update user",
         variant: "destructive",
       });
     } finally {
@@ -313,30 +272,19 @@ export function UserManagement() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/users/${selectedUser._id}`, {
-        method: 'DELETE',
+      await apiDelete(`/api/users/${selectedUser._id}`);
+      
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
       });
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "User deleted successfully",
-        });
-        setIsDeleteDialogOpen(false);
-        setSelectedUser(null);
-        fetchUsers();
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to delete user",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      setIsDeleteDialogOpen(false);
+      setSelectedUser(null);
+      fetchUsers();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to delete user",
+        description: error.message || "Failed to delete user",
         variant: "destructive",
       });
     } finally {
@@ -561,7 +509,7 @@ export function UserManagement() {
                 <Label htmlFor="add-grade">Grade Level *</Label>
                 <Select
                   value={formData.grade_level?.toString() || ''}
-                  onValueChange={(value) => setFormData({ ...formData, grade_level: parseInt(value) })}
+                  onValueChange={(value: string) => setFormData({ ...formData, grade_level: parseInt(value) })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select grade" />
@@ -708,7 +656,7 @@ export function UserManagement() {
                 <Label htmlFor="edit-grade">Grade Level *</Label>
                 <Select
                   value={formData.grade_level?.toString() || ''}
-                  onValueChange={(value) => setFormData({ ...formData, grade_level: parseInt(value) })}
+                  onValueChange={(value: string) => setFormData({ ...formData, grade_level: parseInt(value) })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select grade" />

@@ -43,6 +43,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 
 interface Subject {
   _id: string;
@@ -75,21 +76,12 @@ export function SubjectManagement() {
   const fetchSubjects = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/subjects');
-      const data = await response.json();
-      if (response.ok) {
-        setSubjects(data.subjects || []);
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to fetch subjects",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      const data = await apiGet('/api/subjects');
+      setSubjects(data.subjects || []);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to fetch subjects",
+        description: error.message || "Failed to fetch subjects",
         variant: "destructive",
       });
     } finally {
@@ -114,36 +106,23 @@ export function SubjectManagement() {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/subjects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
-          grade_levels: formData.grade_levels.split(',').map(g => g.trim()).filter(Boolean),
-        }),
+      await apiPost('/api/subjects', {
+        name: formData.name,
+        description: formData.description,
+        grade_levels: formData.grade_levels.split(',').map(g => g.trim()).filter(Boolean),
       });
-      const data = await response.json();
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Subject created successfully",
-        });
-        setIsAddDialogOpen(false);
-        resetForm();
-        fetchSubjects();
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to create subject",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      toast({
+        title: "Success",
+        description: "Subject created successfully",
+      });
+      setIsAddDialogOpen(false);
+      resetForm();
+      fetchSubjects();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to create subject",
+        description: error.message || "Failed to create subject",
         variant: "destructive",
       });
     } finally {
@@ -156,36 +135,23 @@ export function SubjectManagement() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/subjects/${selectedSubject._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
-          grade_levels: formData.grade_levels.split(',').map(g => g.trim()).filter(Boolean),
-        }),
+      await apiPut(`/api/subjects/${selectedSubject._id}`, {
+        name: formData.name,
+        description: formData.description,
+        grade_levels: formData.grade_levels.split(',').map(g => g.trim()).filter(Boolean),
       });
-      const data = await response.json();
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Subject updated successfully",
-        });
-        setIsEditDialogOpen(false);
-        resetForm();
-        fetchSubjects();
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to update subject",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      toast({
+        title: "Success",
+        description: "Subject updated successfully",
+      });
+      setIsEditDialogOpen(false);
+      resetForm();
+      fetchSubjects();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update subject",
+        description: error.message || "Failed to update subject",
         variant: "destructive",
       });
     } finally {
@@ -198,30 +164,19 @@ export function SubjectManagement() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/subjects/${selectedSubject._id}`, {
-        method: 'DELETE',
+      await apiDelete(`/api/subjects/${selectedSubject._id}`);
+      
+      toast({
+        title: "Success",
+        description: "Subject deleted successfully",
       });
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Subject deleted successfully",
-        });
-        setIsDeleteDialogOpen(false);
-        setSelectedSubject(null);
-        fetchSubjects();
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to delete subject",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      setIsDeleteDialogOpen(false);
+      setSelectedSubject(null);
+      fetchSubjects();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to delete subject",
+        description: error.message || "Failed to delete subject",
         variant: "destructive",
       });
     } finally {

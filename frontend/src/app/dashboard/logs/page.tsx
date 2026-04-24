@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, RefreshCw, Info, AlertTriangle, XCircle } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
+import { apiGet } from '@/lib/api';
 
 interface Log {
   _id: string;
@@ -62,21 +63,12 @@ export default function LogsPage() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/logs');
-      const data = await response.json();
-      if (response.ok) {
-        setLogs(data.logs || []);
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to fetch logs",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      const data = await apiGet('/api/logs');
+      setLogs(data.logs || []);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to fetch logs",
+        description: error.message || "Failed to fetch logs",
         variant: "destructive",
       });
     } finally {

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { apiGet } from "@/lib/api";
 import { Input } from "../ui/input";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
@@ -49,11 +50,8 @@ export function SignupForm() {
   const fetchSubjects = async () => {
     setLoadingSubjects(true);
     try {
-      const response = await fetch('/api/subjects');
-      const data = await response.json();
-      if (response.ok) {
-        setSubjects(data.subjects || []);
-      }
+      const data = await apiGet('/api/subjects');
+      setSubjects(data.subjects || []);
     } catch (error) {
       console.error('Failed to fetch subjects:', error);
     } finally {
@@ -192,7 +190,7 @@ export function SignupForm() {
       <div className="flex flex-col space-y-1.5">
         <Label htmlFor="role-select">I am a *</Label>
         <Select 
-          onValueChange={(value) => {
+          onValueChange={(value: string) => {
             setUserType(value as 'student' | 'teacher');
             setSelectedSubjects([]);
             setGradeLevel('');

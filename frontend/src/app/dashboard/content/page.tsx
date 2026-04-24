@@ -49,6 +49,7 @@ import {
   Send,
   Check,
 } from 'lucide-react';
+import { apiGet, apiPost } from '@/lib/api';
 
 interface ClassOption {
   _id: string;
@@ -148,8 +149,7 @@ export default function ContentAnalyzerPage() {
 
   const fetchSubjects = async () => {
     try {
-      const response = await fetch('/api/subjects');
-      const data = await response.json();
+      const data = await apiGet('/api/subjects');
       // Filter to only show subjects assigned to this teacher
       if (user?.subject_ids && data.subjects) {
         const teacherSubjects = data.subjects.filter((s: Subject) => 
@@ -166,8 +166,7 @@ export default function ContentAnalyzerPage() {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch('/api/classes');
-      const data = await response.json();
+      const data = await apiGet('/api/classes');
       setClasses(data.classes || []);
     } catch (error) {
       console.error('Failed to fetch classes:', error);
@@ -186,15 +185,9 @@ export default function ContentAnalyzerPage() {
     
     setLoading(true);
     try {
-      const response = await fetch('/api/generate-content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      const data = await apiPost('/api/generate-content', formData);
       
-      const data = await response.json();
-      
-      if (response.ok && data.content) {
+      if (data.content) {
         const newContent: GeneratedContent = {
           title: formData.topic,
           content: data.content,
@@ -216,10 +209,10 @@ export default function ContentAnalyzerPage() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to generate content',
+        description: error.message || 'Failed to generate content',
         variant: 'destructive',
       });
     } finally {
@@ -249,36 +242,19 @@ export default function ContentAnalyzerPage() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const extractResponse = await fetch('/api/extract-pdf', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      const extractData = await extractResponse.json();
-      
-      if (!extractResponse.ok) {
-        throw new Error(extractData.error || 'Failed to extract text');
-      }
+      const extractData = await apiPost('/api/extract-pdf', formData);
       
       const text = extractData.text || '';
       setExtractedText(text);
       
       // Analyze the content
-      const analyzeResponse = await fetch('/api/analyze-content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text.slice(0, 10000) }),
+      const analyzeData = await apiPost('/api/analyze-content', { text: text.slice(0, 10000) });
+      
+      setAnalysis(analyzeData.analysis);
+      toast({
+        title: 'Analysis Complete',
+        description: 'Content analyzed successfully!',
       });
-      
-      const analyzeData = await analyzeResponse.json();
-      
-      if (analyzeResponse.ok) {
-        setAnalysis(analyzeData.analysis);
-        toast({
-          title: 'Analysis Complete',
-          description: 'Content analyzed successfully!',
-        });
-      }
     } catch (error) {
       console.error('Analysis error:', error);
       toast({
@@ -303,37 +279,24 @@ export default function ContentAnalyzerPage() {
     
     setSharing(true);
     try {
-      const response = await fetch('/api/content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: shareTitle,
-          content: generatedContent.content,
-          class_id: shareClassId,
-          content_type: 'note',
-        }),
+      await apiPost('/api/content', {
+        title: shareTitle,
+        content: generatedContent.content,
+        class_id: shareClassId,
+        content_type: 'note',
       });
       
-      if (response.ok) {
-        toast({
-          title: 'Shared!',
-          description: 'Content shared with your class',
-        });
-        setIsShareDialogOpen(false);
-        setShareTitle('');
-        setShareClassId('');
-      } else {
-        const data = await response.json();
-        toast({
-          title: 'Error',
-          description: data.error || 'Failed to share content',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
+      toast({
+        title: 'Shared!',
+        description: 'Content shared with your class',
+      });
+      setIsShareDialogOpen(false);
+      setShareTitle('');
+      setShareClassId('');
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to share content',
+        description: error.message || 'Failed to share content',
         variant: 'destructive',
       });
     } finally {
@@ -411,7 +374,7 @@ export default function ContentAnalyzerPage() {
                   <Label>Subject</Label>
                   <Select 
                     value={formData.subject_id} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, subject_id: value }))}
+                    onValueChange={(value: string) => setFormData(prev => ({ ...prev, subject_id: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select subject (optional)" />
@@ -430,7 +393,7 @@ export default function ContentAnalyzerPage() {
                   <Label>Content Type</Label>
                   <Select 
                     value={formData.content_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, content_type: value }))}
+                    onValueChange={(value: string) => setFormData(prev => ({ ...prev, content_type: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -451,7 +414,7 @@ export default function ContentAnalyzerPage() {
                   <Label>Language</Label>
                   <Select 
                     value={formData.language} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}
+                    onValueChange={(value: string) => setFormData(prev => ({ ...prev, language: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -469,7 +432,7 @@ export default function ContentAnalyzerPage() {
                   <Label>Grade Level</Label>
                   <Select 
                     value={formData.grade_level} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, grade_level: value }))}
+                    onValueChange={(value: string) => setFormData(prev => ({ ...prev, grade_level: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />

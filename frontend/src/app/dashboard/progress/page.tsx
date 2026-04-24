@@ -48,6 +48,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Pie, PieCh
 } from "@/components/ui/chart";
 import { Loader2, Trophy, Target, TrendingUp, Users, FileText, AlertTriangle, Download, ClipboardCheck, GraduationCap, CheckCircle, XCircle, Eye, Send, BookOpen, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiGet, apiPost, apiPut } from "@/lib/api";
 
 interface TestSubmission {
   _id: string;
@@ -162,8 +163,7 @@ export default function ProgressPage() {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch('/api/classes');
-      const data = await response.json();
+      const data = await apiGet('/api/classes');
       setClasses(data.classes || []);
     } catch (error) {
       console.error('Failed to fetch classes:', error);
@@ -176,8 +176,7 @@ export default function ProgressPage() {
       const url = selectedClass && selectedClass !== 'all'
         ? `/api/test-submissions?class_id=${selectedClass}`
         : '/api/test-submissions';
-      const response = await fetch(url);
-      const data = await response.json();
+      const data = await apiGet(url);
       setSubmissions(data.submissions || []);
       
       // Calculate student stats from submissions
@@ -192,8 +191,7 @@ export default function ProgressPage() {
   const fetchStudentProgress = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/test-submissions/my-progress');
-      const data = await response.json();
+      const data = await apiGet('/api/test-submissions/my-progress');
       setSubmissions(data.submissions || []);
     } catch (error) {
       console.error('Failed to fetch progress:', error);
@@ -260,13 +258,11 @@ export default function ProgressPage() {
   // Fetch tests with their submissions for evaluation
   const fetchTestsForEvaluation = async () => {
     try {
-      const response = await fetch('/api/tests');
-      const testsData = await response.json();
+      const testsData = await apiGet('/api/tests');
       
       const testsWithSubs = await Promise.all(
         (testsData.tests || []).map(async (test: any) => {
-          const subsResponse = await fetch(`/api/test-submissions?test_id=${test._id}`);
-          const subsData = await subsResponse.json();
+          const subsData = await apiGet(`/api/test-submissions?test_id=${test._id}`);
           
           const pendingCount = (subsData.submissions || []).filter(
             (s: TestSubmission) => s.status === 'submitted' || 
@@ -330,24 +326,15 @@ export default function ProgressPage() {
         feedback: data.feedback
       }));
       
-      const response = await fetch(`/api/test-submissions/${selectedSubmission._id}/evaluate`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers, teacher_remarks: teacherRemarks })
-      });
+      await apiPut(`/api/test-submissions/${selectedSubmission._id}/evaluate`, { answers, teacher_remarks: teacherRemarks });
       
-      if (response.ok) {
-        toast({
-          title: 'Evaluation Saved',
-          description: 'The submission has been evaluated successfully.'
-        });
-        setEvaluationDialogOpen(false);
-        fetchSubmissions();
-        fetchTestsForEvaluation();
-      } else {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to save evaluation');
-      }
+      toast({
+        title: 'Evaluation Saved',
+        description: 'The submission has been evaluated successfully.'
+      });
+      setEvaluationDialogOpen(false);
+      fetchSubmissions();
+      fetchTestsForEvaluation();
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -363,21 +350,13 @@ export default function ProgressPage() {
   const handlePublishResults = async (testId: string) => {
     setPublishing(true);
     try {
-      const response = await fetch(`/api/tests/${testId}/publish-results`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      await apiPost(`/api/tests/${testId}/publish-results`, {});
       
-      if (response.ok) {
-        toast({
-          title: 'Results Published',
-          description: 'Students can now view their results.'
-        });
-        fetchTestsForEvaluation();
-      } else {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to publish results');
-      }
+      toast({
+        title: 'Results Published',
+        description: 'Students can now view their results.'
+      });
+      fetchTestsForEvaluation();
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -393,23 +372,13 @@ export default function ProgressPage() {
   const handleExportAIReport = async () => {
     setExportingReport(true);
     try {
-      const response = await fetch('/api/reports/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          class_id: selectedClass,
-          format: 'pdf'
-        })
+      const data = await apiPost('/api/reports/export', {
+        class_id: selectedClass,
+        format: 'pdf'
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setAiReport(data.report);
-        setReportDialogOpen(true);
-      } else {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to generate report');
-      }
+      setAiReport(data.report);
+      setReportDialogOpen(true);
     } catch (error: any) {
       toast({
         title: 'Error',

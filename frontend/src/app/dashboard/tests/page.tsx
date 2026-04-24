@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { apiGet, apiPost } from "@/lib/api";
 
 interface Question {
   question: string;
@@ -145,8 +146,7 @@ export default function TestsPage() {
   const fetchTests = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/tests');
-      const data = await response.json();
+      const data = await apiGet('/api/tests');
       setTests(data.tests || []);
     } catch (error) {
       console.error('Failed to fetch tests:', error);
@@ -162,13 +162,7 @@ export default function TestsPage() {
 
   const startTest = async (test: TestData) => {
     try {
-      const response = await fetch(`/api/tests/${test._id}`);
-      const data = await response.json();
-      
-      if (data.error) {
-        toast({ title: "Error", description: data.error, variant: "destructive" });
-        return;
-      }
+      const data = await apiGet(`/api/tests/${test._id}`);
       
       setSelectedTest({ ...test, questions: data.test.questions });
       setCurrentAnswers(data.test.questions.map(() => ({ answer: '' })));
@@ -193,17 +187,14 @@ export default function TestsPage() {
         }
       } else {
         // Start the clock on the backend silently
-        fetch(`/api/tests/${test._id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ answers: [], action: 'save' }),
-        }).catch(err => console.error('Failed to start native clock:', err));
+        apiPost(`/api/tests/${test._id}`, { answers: [], action: 'save' })
+          .catch(err => console.error('Failed to start native clock:', err));
       }
 
       setTimeLeft(timeRemaining);
       setTakingTest(true);
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to load test", variant: "destructive" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to load test", variant: "destructive" });
     }
   };
 
@@ -220,18 +211,7 @@ export default function TestsPage() {
     
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/tests/${selectedTest._id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: currentAnswers, action }),
-      });
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        toast({ title: "Error", description: data.error, variant: "destructive" });
-        return;
-      }
+      await apiPost(`/api/tests/${selectedTest._id}`, { answers: currentAnswers, action });
       
       if (action === 'submit') {
         toast({ title: "Success", description: "Test submitted successfully!" });
@@ -241,8 +221,8 @@ export default function TestsPage() {
       } else {
         toast({ title: "Saved", description: "Your answers have been saved." });
       }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to submit test", variant: "destructive" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to submit test", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -252,8 +232,7 @@ export default function TestsPage() {
     setLoadingResults(true);
     setViewingResults(true);
     try {
-      const response = await fetch(`/api/tests/${test._id}/results`);
-      const data = await response.json();
+      const data = await apiGet(`/api/tests/${test._id}/results`);
       
       // Check if results are pending
       if (data.results_pending) {
@@ -267,8 +246,8 @@ export default function TestsPage() {
       }
       
       setResultsData(data);
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to load results", variant: "destructive" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to load results", variant: "destructive" });
       setViewingResults(false);
     } finally {
       setLoadingResults(false);

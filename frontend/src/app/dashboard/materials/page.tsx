@@ -52,6 +52,7 @@ import {
   Search,
   Eye
 } from 'lucide-react';
+import { apiGet, apiPost, apiDelete } from '@/lib/api';
 
 interface Subject {
   _id: string;
@@ -120,18 +121,15 @@ export default function MaterialsPage() {
 
   const fetchSubjects = async () => {
     try {
-      const response = await fetch('/api/subjects');
-      const data = await response.json();
-      if (response.ok) {
-        // For teachers, filter to only their assigned subjects
-        if (user?.user_type === 'teacher' && user.subject_ids) {
-          const filtered = (data.subjects || []).filter((s: Subject) => 
-            user.subject_ids?.includes(s._id)
-          );
-          setSubjects(filtered);
-        } else {
-          setSubjects(data.subjects || []);
-        }
+      const data = await apiGet('/api/subjects');
+      // For teachers, filter to only their assigned subjects
+      if (user?.user_type === 'teacher' && user.subject_ids) {
+        const filtered = (data.subjects || []).filter((s: Subject) => 
+          user.subject_ids?.includes(s._id)
+        );
+        setSubjects(filtered);
+      } else {
+        setSubjects(data.subjects || []);
       }
     } catch (error) {
       console.error('Failed to fetch subjects:', error);
@@ -144,11 +142,8 @@ export default function MaterialsPage() {
       const url = filterSubject && filterSubject !== 'all'
         ? `/api/subject-materials?subject_id=${filterSubject}`
         : '/api/subject-materials';
-      const response = await fetch(url);
-      const data = await response.json();
-      if (response.ok) {
-        setMaterials(data.materials || []);
-      }
+      const data = await apiGet(url);
+      setMaterials(data.materials || []);
     } catch (error) {
       toast({
         title: 'Error',
@@ -198,28 +193,15 @@ export default function MaterialsPage() {
       formData.append('subject_id', uploadForm.subject_id);
       formData.append('grade_level', uploadForm.grade_level);
 
-      const response = await fetch('/api/subject-materials', {
-        method: 'POST',
-        body: formData,
+      const response = await apiPost('/api/subject-materials', formData);
+      
+      toast({
+        title: 'Success',
+        description: `Material uploaded! Extracted ${response.wordCount} words.`,
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: `Material uploaded! Extracted ${data.wordCount} words.`,
-        });
-        setIsUploadDialogOpen(false);
-        resetUploadForm();
-        fetchMaterials();
-      } else {
-        toast({
-          title: 'Upload failed',
-          description: data.error || 'Failed to upload material',
-          variant: 'destructive',
-        });
-      }
+      setIsUploadDialogOpen(false);
+      resetUploadForm();
+      fetchMaterials();
     } catch (error) {
       toast({
         title: 'Error',
@@ -235,26 +217,15 @@ export default function MaterialsPage() {
     if (!selectedMaterial) return;
 
     try {
-      const response = await fetch(`/api/subject-materials/${selectedMaterial._id}`, {
-        method: 'DELETE',
+      await apiDelete(`/api/subject-materials/${selectedMaterial._id}`);
+      
+      toast({
+        title: 'Success',
+        description: 'Material deleted successfully',
       });
-
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'Material deleted successfully',
-        });
-        setIsDeleteDialogOpen(false);
-        setSelectedMaterial(null);
-        fetchMaterials();
-      } else {
-        const data = await response.json();
-        toast({
-          title: 'Error',
-          description: data.error || 'Failed to delete material',
-          variant: 'destructive',
-        });
-      }
+      setIsDeleteDialogOpen(false);
+      setSelectedMaterial(null);
+      fetchMaterials();
     } catch (error) {
       toast({
         title: 'Error',
@@ -455,7 +426,7 @@ export default function MaterialsPage() {
                 <Label>Subject *</Label>
                 <Select 
                   value={uploadForm.subject_id} 
-                  onValueChange={(value) => setUploadForm(prev => ({ ...prev, subject_id: value }))}
+                  onValueChange={(value: string) => setUploadForm(prev => ({ ...prev, subject_id: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select subject" />
@@ -473,7 +444,7 @@ export default function MaterialsPage() {
                 <Label>Grade Level</Label>
                 <Select 
                   value={uploadForm.grade_level} 
-                  onValueChange={(value) => setUploadForm(prev => ({ ...prev, grade_level: value }))}
+                  onValueChange={(value: string) => setUploadForm(prev => ({ ...prev, grade_level: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select grade" />

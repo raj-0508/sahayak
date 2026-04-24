@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { TeacherClassManagement } from "@/components/dashboard/teacher-class-management";
 import Link from 'next/link';
+import { apiGet, apiPost } from "@/lib/api";
 
 interface ClassData {
   _id: string;
@@ -75,18 +76,11 @@ export default function ClassesPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('sahayak-token');
-      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
-      
-      const [enrolledRes, availableRes, requestsRes] = await Promise.all([
-        fetch('/api/classes', { headers }),
-        fetch('/api/classes/available', { headers }),
-        fetch('/api/join-requests', { headers })
+      const [enrolledData, availableData, requestsData] = await Promise.all([
+        apiGet('/api/classes'),
+        apiGet('/api/classes/available'),
+        apiGet('/api/join-requests')
       ]);
-
-      const enrolledData = await enrolledRes.json();
-      const availableData = await availableRes.json();
-      const requestsData = await requestsRes.json();
 
       setEnrolledClasses(enrolledData.classes || []);
       setAvailableClasses(availableData.classes || []);
@@ -106,33 +100,20 @@ export default function ClassesPage() {
   const handleJoinRequest = async (classData: ClassData) => {
     setJoiningClass(classData._id);
     try {
-      const response = await fetch('/api/join-requests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ class_id: classData._id }),
-      });
+      await apiPost('/api/join-requests', { class_id: classData._id });
 
-      const data = await response.json();
-      if (response.ok) {
-        toast({
-          title: "Request Sent!",
-          description: "Your join request has been sent to the teacher.",
-        });
-        // Remove from available and add to pending
-        setAvailableClasses(prev => prev.filter(c => c._id !== classData._id));
-        fetchData(); // Refresh data
-        setShowJoinDialog(false);
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to send join request",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      toast({
+        title: "Request Sent!",
+        description: "Your join request has been sent to the teacher.",
+      });
+      // Remove from available and add to pending
+      setAvailableClasses(prev => prev.filter(c => c._id !== classData._id));
+      fetchData(); // Refresh data
+      setShowJoinDialog(false);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to send join request",
+        description: error.message || "Failed to send join request",
         variant: "destructive",
       });
     } finally {

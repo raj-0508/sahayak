@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTTS } from "@/hooks/use-tts";
+import { apiPost } from "@/lib/api";
 
 interface Message {
   id: string;
@@ -312,37 +313,11 @@ export default function AskGaneshaPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/ask-ganesha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: q,
-          language,
-          grade_level: gradeLevel,
-        }),
+      const data = await apiPost('/api/ask-ganesha', {
+        question: q,
+        language,
+        grade_level: gradeLevel,
       });
-
-      const data = await response.json();
-
-      if (data.error) {
-        // Give user-friendly messages for common errors
-        let title = "Error";
-        let description = data.error;
-
-        if (data.error.includes('quota') || data.error.includes('429') || data.error.includes('RESOURCE_EXHAUSTED')) {
-          title = "API Quota Exceeded";
-          description = "The Gemini API key has run out of quota. Please get a new key at aistudio.google.com/app/apikey and update the GOOGLE_AI_API_KEY in your .env file, then restart the server.";
-        } else if (response.status === 401) {
-          title = "Not Logged In";
-          description = "Please log in to use Ask Ganesha.";
-        } else if (data.error.includes('not configured')) {
-          title = "API Key Missing";
-          description = "Gemini API key is not set. Add GOOGLE_AI_API_KEY to your .env file.";
-        }
-
-        toast({ title, description, variant: "destructive" });
-        return;
-      }
 
       const ganeshaMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -354,12 +329,17 @@ export default function AskGaneshaPage() {
 
       setMessages(prev => [...prev, ganeshaMessage]);
 
-    } catch (error) {
-      toast({
-        title: "Network Error",
-        description: "Could not reach the server. Make sure pnpm run dev is running.",
-        variant: "destructive"
-      });
+    } catch (error: any) {
+      // Give user-friendly messages for common errors
+      let title = "Error";
+      let description = error.message || "Could not reach the server.";
+
+      if (description.includes('quota') || description.includes('429') || description.includes('RESOURCE_EXHAUSTED')) {
+        title = "API Quota Exceeded";
+        description = "The Gemini API key has run out of quota.";
+      }
+
+      toast({ title, description, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -445,7 +425,7 @@ export default function AskGaneshaPage() {
 
       {/* Chat Area */}
       <Card className="flex-1 flex flex-col min-h-0">
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+        <ScrollArea className="flex-1 p-4" ref={scrollRef as any}>
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-8">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-5xl mb-6 shadow-lg">

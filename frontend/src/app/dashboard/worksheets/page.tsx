@@ -59,6 +59,7 @@ import {
   ClipboardCheck,
   BookOpen,
 } from 'lucide-react';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 
 interface Question {
   question: string;
@@ -155,9 +156,7 @@ export default function TestGeneratorPage() {
 
   const fetchSubjects = async () => {
     try {
-      // Fetch all subjects, will filter based on user's assigned subjects
-      const response = await fetch('/api/subjects');
-      const data = await response.json();
+      const data = await apiGet('/api/subjects');
       // Filter to only show subjects assigned to this teacher
       if (user?.subject_ids && data.subjects) {
         const teacherSubjects = data.subjects.filter((s: Subject) => 
@@ -174,8 +173,7 @@ export default function TestGeneratorPage() {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch('/api/classes');
-      const data = await response.json();
+      const data = await apiGet('/api/classes');
       setClasses(data.classes || []);
     } catch (error) {
       console.error('Failed to fetch classes:', error);
@@ -185,8 +183,7 @@ export default function TestGeneratorPage() {
   const fetchTests = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/tests');
-      const data = await response.json();
+      const data = await apiGet('/api/tests');
       setTests(data.tests || []);
     } catch (error) {
       console.error('Failed to fetch tests:', error);
@@ -259,36 +256,22 @@ export default function TestGeneratorPage() {
     
     setSaving(true);
     try {
-      const response = await fetch('/api/tests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          questions,
-        }),
+      await apiPost('/api/tests', {
+        ...formData,
+        questions,
       });
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: `Test "${formData.title}" created successfully!`,
-        });
-        setIsCreateDialogOpen(false);
-        resetForm();
-        fetchTests();
-      } else {
-        toast({
-          title: 'Error',
-          description: data.error || 'Failed to create test',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
+      toast({
+        title: 'Success',
+        description: `Test "${formData.title}" created successfully!`,
+      });
+      setIsCreateDialogOpen(false);
+      resetForm();
+      fetchTests();
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to create test',
+        description: error.message || 'Failed to create test',
         variant: 'destructive',
       });
     } finally {
@@ -300,30 +283,19 @@ export default function TestGeneratorPage() {
     if (!selectedTest) return;
     
     try {
-      const response = await fetch(`/api/tests/${selectedTest._id}`, {
-        method: 'DELETE',
-      });
+      await apiDelete(`/api/tests/${selectedTest._id}`);
       
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'Test deleted successfully',
-        });
-        setIsDeleteDialogOpen(false);
-        setSelectedTest(null);
-        fetchTests();
-      } else {
-        const data = await response.json();
-        toast({
-          title: 'Error',
-          description: data.error || 'Failed to delete test',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
+      toast({
+        title: 'Success',
+        description: 'Test deleted successfully',
+      });
+      setIsDeleteDialogOpen(false);
+      setSelectedTest(null);
+      fetchTests();
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to delete test',
+        description: error.message || 'Failed to delete test',
         variant: 'destructive',
       });
     }
@@ -331,19 +303,13 @@ export default function TestGeneratorPage() {
 
   const handleTogglePublish = async (test: Test) => {
     try {
-      const response = await fetch(`/api/tests/${test._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_published: !test.is_published }),
-      });
+      await apiPut(`/api/tests/${test._id}`, { is_published: !test.is_published });
       
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: test.is_published ? 'Test unpublished' : 'Test published to students!',
-        });
-        fetchTests();
-      }
+      toast({
+        title: 'Success',
+        description: test.is_published ? 'Test unpublished' : 'Test published to students!',
+      });
+      fetchTests();
     } catch (error) {
       toast({
         title: 'Error',
@@ -365,22 +331,16 @@ export default function TestGeneratorPage() {
     
     setGenerating(true);
     try {
-      const response = await fetch('/api/generate-questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic: aiTopic,
-          num_questions: aiNumQuestions,
-          question_type: aiQuestionType,
-          difficulty: aiDifficulty,
-          subject_id: formData.subject_id || undefined,
-          use_rag: aiUseRag && formData.subject_id,
-        }),
+      const data = await apiPost('/api/generate-questions', {
+        topic: aiTopic,
+        num_questions: aiNumQuestions,
+        question_type: aiQuestionType,
+        difficulty: aiDifficulty,
+        subject_id: formData.subject_id || undefined,
+        use_rag: aiUseRag && formData.subject_id,
       });
       
-      const data = await response.json();
-      
-      if (response.ok && data.questions) {
+      if (data.questions) {
         setQuestions([...questions, ...data.questions]);
         setUsedRagForGeneration(data.used_rag || false);
         toast({
@@ -395,10 +355,10 @@ export default function TestGeneratorPage() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to generate questions',
+        description: error.message || 'Failed to generate questions',
         variant: 'destructive',
       });
     } finally {
@@ -521,7 +481,7 @@ export default function TestGeneratorPage() {
                     <Label>Subject *</Label>
                     <Select 
                       value={formData.subject_id} 
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, subject_id: value }))}
+                      onValueChange={(value: string) => setFormData(prev => ({ ...prev, subject_id: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select subject" />
@@ -540,7 +500,7 @@ export default function TestGeneratorPage() {
                   <Label>Class *</Label>
                   <Select 
                     value={formData.class_id} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, class_id: value }))}
+                    onValueChange={(value: string) => setFormData(prev => ({ ...prev, class_id: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select class" />
@@ -768,7 +728,7 @@ export default function TestGeneratorPage() {
                     <Label>Correct Answer</Label>
                     <Select 
                       value={currentQuestion.correct_answer || 'select'} 
-                      onValueChange={(value) => setCurrentQuestion(prev => ({ ...prev, correct_answer: value === 'select' ? '' : value }))}
+                      onValueChange={(value: string) => setCurrentQuestion(prev => ({ ...prev, correct_answer: value === 'select' ? '' : value }))}
                     >
                       <SelectTrigger className="w-[200px]">
                         <SelectValue placeholder="Select correct answer" />

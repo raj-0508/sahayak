@@ -23,6 +23,7 @@ import {
   X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiPost } from "@/lib/api";
 
 interface ConceptNode {
   id: string;
@@ -95,23 +96,12 @@ export default function ConceptVisualizerPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('/api/extract-pdf', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        toast({ title: "Error", description: data.error, variant: "destructive" });
-        setUploadedFile(null);
-        return;
-      }
+      const data = await apiPost('/api/extract-pdf', formData);
 
       setExtractedText(data.text);
       toast({ title: "Success", description: "PDF text extracted successfully!" });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to extract text from PDF", variant: "destructive" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to extract text from PDF", variant: "destructive" });
       setUploadedFile(null);
     } finally {
       setExtracting(false);
@@ -138,22 +128,11 @@ export default function ConceptVisualizerPage() {
     setRagSource(null);
     
     try {
-      const response = await fetch('/api/concept-visualizer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic: inputTopic || undefined,
-          text: extractedText.trim() || undefined,
-          useRag: !!inputTopic && !extractedText.trim(),
-        }),
+      const data = await apiPost('/api/concept-visualizer', {
+        topic: inputTopic || undefined,
+        text: extractedText.trim() || undefined,
+        useRag: !!inputTopic && !extractedText.trim(),
       });
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        toast({ title: "Error", description: data.error, variant: "destructive" });
-        return;
-      }
       
       if (data.warning) {
         toast({ title: "Note", description: data.warning, variant: "default" });

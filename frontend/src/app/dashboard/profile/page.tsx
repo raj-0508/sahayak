@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, User, Mail, Phone, BookOpen, GraduationCap, Calendar, Save } from "lucide-react";
+import { apiPut } from "@/lib/api";
 
 const GRADE_LEVELS = [
   { value: '1', label: 'Grade 1' },
@@ -98,29 +99,18 @@ export default function ProfilePage() {
         preferred_language: formData.preferred_language
       };
 
-      const response = await fetch('/api/auth/me', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      await apiPut('/api/auth/me', payload);
+      
+      toast({
+        title: "Success",
+        description: "Your profile has been updated. If you changed your language, please refresh the page to apply the new language interface globally.",
       });
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Your profile has been updated. If you changed your language, please refresh the page to apply the new language interface globally.",
-        });
-        
-        // Refresh local user state silently or reload to bind changes to google translate
-        if (user.preferred_language !== formData.preferred_language) {
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
-        }
-        
-      } else {
-        throw new Error(data.error || "Failed to update profile");
+      // Refresh local user state silently or reload to bind changes to google translate
+      if (user.preferred_language !== formData.preferred_language) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       }
     } catch (error: any) {
       toast({
@@ -222,7 +212,7 @@ export default function ProfilePage() {
                   <Label htmlFor="grade_level">Grade Level</Label>
                   <Select 
                     value={formData.grade_level} 
-                    onValueChange={(val) => setFormData({...formData, grade_level: val})}
+                    onValueChange={(val: string) => setFormData({...formData, grade_level: val})}
                   >
                     <SelectTrigger id="grade_level">
                       <SelectValue placeholder="Select your grade" />
@@ -241,7 +231,7 @@ export default function ProfilePage() {
                 <Label htmlFor="preferred_language">Interface Language</Label>
                 <Select 
                   value={formData.preferred_language} 
-                  onValueChange={(val) => setFormData({...formData, preferred_language: val})}
+                  onValueChange={(val: string) => setFormData({...formData, preferred_language: val})}
                 >
                   <SelectTrigger id="preferred_language">
                     <SelectValue placeholder="Select your language" />
