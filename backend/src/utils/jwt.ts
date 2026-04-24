@@ -14,8 +14,8 @@ export function generateToken(user: any): string {
 export function setAuthCookie(res: express.Response, token: string): void {
   res.cookie('auth-token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: true, // Always true for Vercel/Production
+    sameSite: 'none', // Required for cross-site cookies (different Vercel subdomains)
     maxAge: 60 * 60 * 24 * 7 * 1000,
     path: '/',
   });
