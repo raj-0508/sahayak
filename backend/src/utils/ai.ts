@@ -4,11 +4,9 @@ const API_KEY = process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 const DEFAULT_MODELS = [
-  'gemini-3-flash-preview',
-  'gemini-2.5-flash',
   'gemini-2.0-flash',
   'gemini-1.5-flash',
-  'gemini-flash-latest',
+  'gemini-1.5-pro',
   'gemini-pro-latest'
 ];
 
